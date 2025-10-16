@@ -246,6 +246,7 @@ export default function Page() {
             placing={!!placingTaskId}
             mode={timeMode}
             half={half}
+            selectedId={selectedId}
             onTapPlace={(startMin) => {
               if (!placingTaskId) return
               onSchedule(placingTaskId, startMin)

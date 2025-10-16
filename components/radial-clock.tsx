@@ -16,6 +16,7 @@ type Props = {
   onTapPlace?: (startMin: number) => void
   mode?: ClockMode
   half?: Half
+  selectedId?: string | null // ID of currently selected task for wave gradient effect
   // NEW: callbacks for edit interactions
   onMoveTask?: (taskId: string, startMin: number) => void
   onResizeTask?: (taskId: string, startMin: number, durationMin: number) => void
@@ -67,6 +68,7 @@ function RadialClock({
   onTapPlace,
   mode = "24h",
   half = "AM",
+  selectedId = null,
   onMoveTask,
   onResizeTask,
   onSelectTask,
@@ -145,6 +147,8 @@ function RadialClock({
   }>(null)
 
   const [ctxMenu, setCtxMenu] = useState<null | { x: number; y: number; id: string; splitAt: number }>(null)
+  const [placementRipples, setPlacementRipples] = useState<Array<{ id: string; x: number; y: number; timestamp: number }>>([])
+  const [tapRipples, setTapRipples] = useState<Array<{ id: string; x: number; y: number; timestamp: number }>>([])
   const holdTimerRef = useRef<number | null>(null)
   const splitTimerRef = useRef<number | null>(null)
   const movedRef = useRef(false)
@@ -293,6 +297,30 @@ function RadialClock({
       return
     }
     lastTapRef.current = { id, t: now }
+    
+    // Add tap ripple effect at task center
+    const task = tasks.find(t => t.id === id)
+    if (task && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      const startMin = task.startMin || 0
+      const durationMin = task.durationMin
+      const midMin = startMin + durationMin / 2
+      
+      const angle = is12h ? minutesToAngle12(midMin % (12 * 60)) : minutesToAngle(midMin)
+      const rad = (angle * Math.PI) / 180
+      const taskR = (bandInner + bandOuter) / 2
+      const taskX = center + taskR * Math.cos(rad)
+      const taskY = center + taskR * Math.sin(rad)
+      
+      const rippleId = `tap-${Date.now()}-${Math.random()}`
+      setTapRipples(prev => [...prev, {
+        id: rippleId,
+        x: taskX,
+        y: taskY,
+        timestamp: Date.now()
+      }])
+    }
+    
     onSelectTask?.(id) // single tap selects task for details
   }
 
@@ -314,6 +342,17 @@ function RadialClock({
     const { clientX, clientY } = e
     const mins = scheduleFromPoint(clientX, clientY)
     if (mins == null) return
+    
+    // Add placement ripple effect
+    const rect = ref.current!.getBoundingClientRect()
+    const rippleId = `placement-${Date.now()}-${Math.random()}`
+    setPlacementRipples(prev => [...prev, {
+      id: rippleId,
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+      timestamp: Date.now()
+    }])
+    
     onTapPlace(mins)
   }
 
@@ -334,6 +373,19 @@ function RadialClock({
     return () => window.removeEventListener("pointerdown", onGlobalPointerDown)
   }, [ctxMenu, onRequestReset])
 
+  // Cleanup ripple effects after animation completes
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now()
+      const rippleLifetime = 600 // matches animation duration
+      
+      setPlacementRipples(prev => prev.filter(ripple => now - ripple.timestamp < rippleLifetime))
+      setTapRipples(prev => prev.filter(ripple => now - ripple.timestamp < rippleLifetime))
+    }, 100)
+    
+    return () => clearInterval(cleanupInterval)
+  }, [])
+
   return (
     <div
       ref={ref}
@@ -350,41 +402,105 @@ function RadialClock({
             <stop offset="65%" stopColor={isAM ? "rgba(245,245,245,0.9)" : "rgba(255,255,255,0.04)"} />
             <stop offset="100%" stopColor={isAM ? "rgba(230,230,230,0.85)" : "rgba(255,255,255,0.03)"} />
           </radialGradient>
-          <filter id="red-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+          <filter id="sage-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.545
+                                                           0 0 0 0 0.667
+                                                           0 0 0 0 0.569
+                                                           0 0 0 1 0" result="sageBlur" />
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="sageBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
 
         <circle cx={center} cy={center} r={outer} fill="var(--card)" />
+        
+        {/* Breathing concentric rings for magical effect */}
+        <g className="animate-breathing">
+          <circle 
+            cx={center} 
+            cy={center} 
+            r={inner + (outer - inner) * 0.3} 
+            fill="none" 
+            stroke="var(--accent)" 
+            strokeWidth={1} 
+            strokeOpacity={0.2}
+          />
+          <circle 
+            cx={center} 
+            cy={center} 
+            r={inner + (outer - inner) * 0.6} 
+            fill="none" 
+            stroke="var(--accent)" 
+            strokeWidth={0.8} 
+            strokeOpacity={0.15}
+          />
+          <circle 
+            cx={center} 
+            cy={center} 
+            r={inner + (outer - inner) * 0.8} 
+            fill="none" 
+            stroke="var(--accent)" 
+            strokeWidth={0.6} 
+            strokeOpacity={0.1}
+          />
+        </g>
+        
         <circle cx={center} cy={center} r={inner} fill="var(--secondary)" />
 
-        {/* Major hour ticks */}
-        <g className="text-foreground/80">
+        {/* Constellation dots (replacing major hour ticks) */}
+        <g>
           {Array.from({ length: hoursOnDial }).map((_, i) => {
             const angle = (i / hoursOnDial) * 360 - 90
             const rad = (angle * Math.PI) / 180
-            const x1 = center + (outer - 12) * Math.cos(rad)
-            const y1 = center + (outer - 12) * Math.sin(rad)
-            const x2 = center + outer * Math.cos(rad)
-            const y2 = center + outer * Math.sin(rad)
-            return <line key={`h-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth={2.5} />
+            const x = center + (outer - 6) * Math.cos(rad)
+            const y = center + (outer - 6) * Math.sin(rad)
+            const isNorthStar = i === 0 // 12 o'clock position (0 index)
+            return (
+              <circle 
+                key={`constellation-${i}`} 
+                cx={x} 
+                cy={y} 
+                r={isNorthStar ? 3.5 : 2.5} 
+                fill="var(--accent)" 
+                fillOpacity={isNorthStar ? 0.9 : 0.7}
+                className={isNorthStar ? "animate-twinkle" : "animate-twinkle"}
+                style={{
+                  animationDelay: `${i * 0.2}s`,
+                  filter: isNorthStar ? "drop-shadow(0 0 4px var(--accent))" : "drop-shadow(0 0 2px var(--accent))"
+                }}
+              />
+            )
           })}
         </g>
 
-        {/* Minor ticks */}
-        <g className="text-foreground/50">
+        {/* Minor constellation dots (replacing minor ticks) */}
+        <g>
           {Array.from({ length: hoursOnDial * 4 }).map((_, i) => {
+            // Skip positions that would overlap with major constellation dots
+            if (i % 4 === 0) return null
+            
             const angle = (i / (hoursOnDial * 4)) * 360 - 90
             const rad = (angle * Math.PI) / 180
-            const x1 = center + (outer - 8) * Math.cos(rad)
-            const y1 = center + (outer - 8) * Math.sin(rad)
-            const x2 = center + outer * Math.cos(rad)
-            const y2 = center + outer * Math.sin(rad)
-            return <line key={`m-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth={1.5} />
+            const x = center + (outer - 4) * Math.cos(rad)
+            const y = center + (outer - 4) * Math.sin(rad)
+            return (
+              <circle 
+                key={`minor-constellation-${i}`} 
+                cx={x} 
+                cy={y} 
+                r={1.2} 
+                fill="var(--accent)" 
+                fillOpacity={0.4}
+                className="animate-twinkle"
+                style={{
+                  animationDelay: `${i * 0.15}s`,
+                  filter: "drop-shadow(0 0 1px var(--accent))"
+                }}
+              />
+            )
           })}
         </g>
 
@@ -416,6 +532,7 @@ function RadialClock({
 
         {renderTasks.map((t) => {
           const isEditing = editingIdRef.current === t.id && t.fullyVisible
+          const isSelected = selectedId === t.id
           const fill = colorVar(t.color)
           return (
             <g
@@ -493,6 +610,7 @@ function RadialClock({
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className={isSelected ? "animate-wave-gradient" : ""}
               />
               {isEditing && (
                 <>
@@ -551,7 +669,7 @@ function RadialClock({
             stroke="var(--primary)"
             strokeOpacity={0.9}
             strokeWidth={6}
-            filter="url(#red-glow)"
+            filter="url(#sage-glow)"
           />
         ))}
 
@@ -568,6 +686,75 @@ function RadialClock({
             strokeWidth={3}
           />
         )}
+
+        {/* Placement Ripples (sage green) */}
+        {placementRipples.map((ripple) => (
+          <circle
+            key={ripple.id}
+            cx={ripple.x}
+            cy={ripple.y}
+            r={0}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth={2}
+            strokeOpacity={0.8}
+            className="animate-ripple"
+          />
+        ))}
+
+        {/* Tap Ripples (foreground color) */}
+        {tapRipples.map((ripple) => (
+          <circle
+            key={ripple.id}
+            cx={ripple.x}
+            cy={ripple.y}
+            r={0}
+            fill="none"
+            stroke="var(--foreground)"
+            strokeWidth={2}
+            strokeOpacity={0.6}
+            className="animate-ripple"
+          />
+        ))}
+
+        {/* Temporal Aura - Current Time Indicator */}
+        {(() => {
+          const now = new Date()
+          const currentMinutes = now.getHours() * 60 + now.getMinutes()
+          let displayMinutes = currentMinutes
+          
+          // Adjust for 12h mode
+          if (is12h) {
+            const currentHalf = currentMinutes < 12 * 60 ? "AM" : "PM"
+            if (currentHalf !== half) return null // Don't show if not in current half
+            displayMinutes = currentMinutes % (12 * 60)
+          }
+          
+          const angle = is12h ? minutesToAngle12(displayMinutes) : minutesToAngle(displayMinutes)
+          const rad = (angle * Math.PI) / 180
+          const indicatorR = (bandInner + bandOuter) / 2
+          const x = center + indicatorR * Math.cos(rad)
+          const y = center + indicatorR * Math.sin(rad)
+          
+          return (
+            <g className="animate-glow-pulse">
+              <circle
+                cx={x}
+                cy={y}
+                r={4}
+                fill="var(--accent)"
+                fillOpacity={0.9}
+              />
+              <circle
+                cx={x}
+                cy={y}
+                r={2}
+                fill="white"
+                fillOpacity={0.8}
+              />
+            </g>
+          )
+        })()}
       </svg>
 
       {ctxMenu && (
