@@ -161,8 +161,6 @@ export default function Page() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
 
-
-
   const handleExportGoogle = () => {
     exportToGoogleCalendar(tasks, date)
     setExportMenuOpen(false)
