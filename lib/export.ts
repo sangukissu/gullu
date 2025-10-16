@@ -2,17 +2,16 @@ import { format, addMinutes } from "date-fns"
 import type { PlannerTask } from "@/components/types"
 
 // Utility to detect platform
-export function detectPlatform() {
-  if (typeof window === 'undefined') return 'unknown'
+export function detectPlatform(): 'android' | 'web' {
+  if (typeof window === 'undefined') return 'web'
   
   const userAgent = window.navigator.userAgent.toLowerCase()
-  const isMac = /macintosh|mac os x/i.test(userAgent)
-  const isIOS = /iphone|ipad|ipod/i.test(userAgent)
-  const isAndroid = /android/i.test(userAgent)
   
-  if (isMac || isIOS) return 'apple'
-  if (isAndroid) return 'android'
-  return 'other'
+  if (userAgent.includes('android')) {
+    return 'android'
+  } else {
+    return 'web'
+  }
 }
 
 // Convert minutes since midnight to time string
@@ -59,29 +58,7 @@ export function generateICS(tasks: PlannerTask[], date: Date): string {
   return ics.join('\r\n')
 }
 
-// Generate Apple Reminders URL scheme
-export function generateAppleRemindersURL(tasks: PlannerTask[], date: Date): string {
-  const scheduledTasks = tasks.filter(task => task.startMin !== undefined && task.durationMin !== undefined)
-  
-  if (scheduledTasks.length === 0) return ''
-  
-  // For multiple tasks, we'll create a reminder list
-  const listName = `Tasks for ${format(date, 'MMM dd, yyyy')}`
-  let url = `x-apple-reminderkit://REMCDReminder`
-  
-  // Create the first reminder with list creation
-  const firstTask = scheduledTasks[0]
-  const dueDate = addMinutes(date, firstTask.startMin!)
-  
-  const params = new URLSearchParams({
-    title: firstTask.title,
-    notes: `${firstTask.icon} ${firstTask.category} task - ${firstTask.durationMin}min`,
-    dueDate: dueDate.toISOString(),
-    list: listName
-  })
-  
-  return `${url}?${params.toString()}`
-}
+// Remove unused Apple Reminders function since Mac support is removed
 
 // Download ICS file for Android/other platforms
 export function downloadICS(tasks: PlannerTask[], date: Date): void {
@@ -109,24 +86,8 @@ export function exportTasks(tasks: PlannerTask[], date: Date): void {
     return
   }
   
-  switch (platform) {
-    case 'apple':
-      // Try Apple Reminders first, fallback to ICS download
-      const reminderURL = generateAppleRemindersURL(scheduledTasks, date)
-      if (reminderURL) {
-        window.location.href = reminderURL
-      } else {
-        downloadICS(scheduledTasks, date)
-      }
-      break
-      
-    case 'android':
-    case 'other':
-    default:
-      // Download ICS file for calendar import
-      downloadICS(scheduledTasks, date)
-      break
-  }
+  // Always download ICS file for calendar import since Mac Reminders support is removed
+  downloadICS(scheduledTasks, date)
 }
 
 // Export for Google Calendar (web-based)

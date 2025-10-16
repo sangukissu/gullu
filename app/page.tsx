@@ -161,10 +161,7 @@ export default function Page() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
 
-  const handleExportCalendar = () => {
-    exportTasks(tasks, date)
-    setExportMenuOpen(false)
-  }
+
 
   const handleExportGoogle = () => {
     exportToGoogleCalendar(tasks, date)
@@ -374,12 +371,7 @@ export default function Page() {
                   >
                     Export as JSON
                   </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer"
-                    onClick={handleExportCalendar}
-                  >
-                    Export to Calendar/Reminders
-                  </button>
+                  
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer"
                     onClick={handleExportGoogle}

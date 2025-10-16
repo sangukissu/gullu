@@ -457,10 +457,10 @@ function RadialClock({
             const rad = (angle * Math.PI) / 180
             const innerR = outer - 18
             const outerR = outer - 8
-            const x1 = center + innerR * Math.cos(rad)
-            const y1 = center + innerR * Math.sin(rad)
-            const x2 = center + outerR * Math.cos(rad)
-            const y2 = center + outerR * Math.sin(rad)
+            const x1 = Math.round((center + innerR * Math.cos(rad)) * 1000) / 1000
+            const y1 = Math.round((center + innerR * Math.sin(rad)) * 1000) / 1000
+            const x2 = Math.round((center + outerR * Math.cos(rad)) * 1000) / 1000
+            const y2 = Math.round((center + outerR * Math.sin(rad)) * 1000) / 1000
             return (
               <line
                 key={`hour-marker-${i}`}
@@ -482,8 +482,8 @@ function RadialClock({
           {Array.from({ length: hoursOnDial }).map((_, i) => {
             const angle = (i / hoursOnDial) * 360 - 90
             const rad = (angle * Math.PI) / 180
-            const x = center + (outer - 2) * Math.cos(rad)
-            const y = center + (outer - 2) * Math.sin(rad)
+            const x = Math.round((center + (outer - 2) * Math.cos(rad)) * 1000) / 1000
+            const y = Math.round((center + (outer - 2) * Math.sin(rad)) * 1000) / 1000
             const isNorthStar = i === 0 // 12 o'clock position (0 index)
             return (
               <circle 
@@ -513,10 +513,10 @@ function RadialClock({
             const rad = (angle * Math.PI) / 180
             const innerR = outer - 15
             const outerR = outer - 8
-            const x1 = center + innerR * Math.cos(rad)
-            const y1 = center + innerR * Math.sin(rad)
-            const x2 = center + outerR * Math.cos(rad)
-            const y2 = center + outerR * Math.sin(rad)
+            const x1 = Math.round((center + innerR * Math.cos(rad)) * 1000) / 1000
+            const y1 = Math.round((center + innerR * Math.sin(rad)) * 1000) / 1000
+            const x2 = Math.round((center + outerR * Math.cos(rad)) * 1000) / 1000
+            const y2 = Math.round((center + outerR * Math.sin(rad)) * 1000) / 1000
             return (
               <line
                 key={`quarter-marker-${i}`}
@@ -541,8 +541,8 @@ function RadialClock({
             
             const angle = (i / (hoursOnDial * 4)) * 360 - 90
             const rad = (angle * Math.PI) / 180
-            const x = center + (outer - 2) * Math.cos(rad)
-            const y = center + (outer - 2) * Math.sin(rad)
+            const x = Math.round((center + (outer - 2) * Math.cos(rad)) * 1000) / 1000
+            const y = Math.round((center + (outer - 2) * Math.sin(rad)) * 1000) / 1000
             return (
               <circle 
                 key={`minor-constellation-${i}`} 
@@ -567,8 +567,8 @@ function RadialClock({
           const angle = (hour / hoursOnDial) * 360 - 90
           const rad = (angle * Math.PI) / 180
           const r = inner + (outer - inner) / 2
-          const x = center + (r - 8) * Math.cos(rad)
-          const y = center + (r - 8) * Math.sin(rad)
+          const x = Math.round((center + (r - 8) * Math.cos(rad)) * 1000) / 1000
+          const y = Math.round((center + (r - 8) * Math.sin(rad)) * 1000) / 1000
           const label = is12h ? (hour === 0 ? "12" : String(hour).padStart(2, "0")) : String(hour).padStart(2, "0")
           return (
             <text
@@ -790,8 +790,8 @@ function RadialClock({
           const angle = is12h ? minutesToAngle12(displayMinutes) : minutesToAngle(displayMinutes)
           const rad = (angle * Math.PI) / 180
           const indicatorR = (bandInner + bandOuter) / 2
-          const x = center + indicatorR * Math.cos(rad)
-          const y = center + indicatorR * Math.sin(rad)
+          const x = Math.round((center + indicatorR * Math.cos(rad)) * 1000) / 1000
+          const y = Math.round((center + indicatorR * Math.sin(rad)) * 1000) / 1000
           
           return (
             <g className="animate-glow-pulse">
