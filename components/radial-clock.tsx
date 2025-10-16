@@ -402,6 +402,17 @@ function RadialClock({
             <stop offset="65%" stopColor={isAM ? "rgba(245,245,245,0.9)" : "rgba(255,255,255,0.04)"} />
             <stop offset="100%" stopColor={isAM ? "rgba(230,230,230,0.85)" : "rgba(255,255,255,0.03)"} />
           </radialGradient>
+          {/* Enhanced AM/PM background gradients */}
+          <radialGradient id="am-background" cx="50%" cy="50%" r="80%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.03)" />
+            <stop offset="50%" stopColor="rgba(248,250,252,0.02)" />
+            <stop offset="100%" stopColor="rgba(241,245,249,0.01)" />
+          </radialGradient>
+          <radialGradient id="pm-background" cx="50%" cy="50%" r="80%">
+            <stop offset="0%" stopColor="rgba(15,23,42,0.05)" />
+            <stop offset="50%" stopColor="rgba(30,41,59,0.03)" />
+            <stop offset="100%" stopColor="rgba(51,65,85,0.02)" />
+          </radialGradient>
           <filter id="sage-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
             <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.545
@@ -416,6 +427,16 @@ function RadialClock({
         </defs>
 
         <circle cx={center} cy={center} r={outer} fill="var(--card)" />
+        
+        {/* AM/PM Background Overlay - only visible in 12h mode */}
+        {is12h && (
+          <circle 
+            cx={center} 
+            cy={center} 
+            r={outer} 
+            fill={isAM ? "url(#am-background)" : "url(#pm-background)"} 
+          />
+        )}
         
         {/* Breathing concentric rings for magical effect */}
         <g className="animate-breathing">
@@ -448,7 +469,7 @@ function RadialClock({
           />
         </g>
         
-        <circle cx={center} cy={center} r={inner} fill="var(--secondary)" />
+        <circle cx={center} cy={center} r={inner} fill={is12h ? (isAM ? "rgba(248,250,252,0.1)" : "var(--secondary)") : "var(--secondary)"} />
 
         {/* Static hour markers - thick and longer lines */}
         <g>
