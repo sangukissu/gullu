@@ -422,16 +422,7 @@ function RadialClock({
           <circle 
             cx={center} 
             cy={center} 
-            r={inner + (outer - inner) * 0.3} 
-            fill="none" 
-            stroke="var(--accent)" 
-            strokeWidth={1} 
-            strokeOpacity={0.2}
-          />
-          <circle 
-            cx={center} 
-            cy={center} 
-            r={inner + (outer - inner) * 0.6} 
+            r={inner + (outer - inner) * 0.25} 
             fill="none" 
             stroke="var(--accent)" 
             strokeWidth={0.8} 
@@ -440,23 +431,59 @@ function RadialClock({
           <circle 
             cx={center} 
             cy={center} 
-            r={inner + (outer - inner) * 0.8} 
+            r={inner + (outer - inner) * 0.5} 
             fill="none" 
             stroke="var(--accent)" 
             strokeWidth={0.6} 
-            strokeOpacity={0.1}
+            strokeOpacity={0.12}
+          />
+          <circle 
+            cx={center} 
+            cy={center} 
+            r={inner + (outer - inner) * 0.75} 
+            fill="none" 
+            stroke="var(--accent)" 
+            strokeWidth={0.4} 
+            strokeOpacity={0.08}
           />
         </g>
         
         <circle cx={center} cy={center} r={inner} fill="var(--secondary)" />
 
-        {/* Constellation dots (replacing major hour ticks) */}
+        {/* Static hour markers - thick and longer lines */}
         <g>
           {Array.from({ length: hoursOnDial }).map((_, i) => {
             const angle = (i / hoursOnDial) * 360 - 90
             const rad = (angle * Math.PI) / 180
-            const x = center + (outer - 6) * Math.cos(rad)
-            const y = center + (outer - 6) * Math.sin(rad)
+            const innerR = outer - 18
+            const outerR = outer - 8
+            const x1 = center + innerR * Math.cos(rad)
+            const y1 = center + innerR * Math.sin(rad)
+            const x2 = center + outerR * Math.cos(rad)
+            const y2 = center + outerR * Math.sin(rad)
+            return (
+              <line
+                key={`hour-marker-${i}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="var(--foreground)"
+                strokeWidth={2.5}
+                strokeOpacity={0.6}
+                strokeLinecap="round"
+              />
+            )
+          })}
+        </g>
+
+        {/* Constellation dots (animated) - restored */}
+        <g>
+          {Array.from({ length: hoursOnDial }).map((_, i) => {
+            const angle = (i / hoursOnDial) * 360 - 90
+            const rad = (angle * Math.PI) / 180
+            const x = center + (outer - 2) * Math.cos(rad)
+            const y = center + (outer - 2) * Math.sin(rad)
             const isNorthStar = i === 0 // 12 o'clock position (0 index)
             return (
               <circle 
@@ -468,7 +495,7 @@ function RadialClock({
                 fillOpacity={isNorthStar ? 0.9 : 0.7}
                 className={isNorthStar ? "animate-twinkle" : "animate-twinkle"}
                 style={{
-                  animationDelay: `${i * 0.2}s`,
+                  animationDelay: `${(i * 0.3) % 4}s`,
                   filter: isNorthStar ? "drop-shadow(0 0 4px var(--accent))" : "drop-shadow(0 0 2px var(--accent))"
                 }}
               />
@@ -476,7 +503,37 @@ function RadialClock({
           })}
         </g>
 
-        {/* Minor constellation dots (replacing minor ticks) */}
+        {/* Static 15-minute markers - subtle grayish lines */}
+        <g>
+          {Array.from({ length: hoursOnDial * 4 }).map((_, i) => {
+            // Skip positions that would overlap with hour markers
+            if (i % 4 === 0) return null
+            
+            const angle = (i / (hoursOnDial * 4)) * 360 - 90
+            const rad = (angle * Math.PI) / 180
+            const innerR = outer - 15
+            const outerR = outer - 8
+            const x1 = center + innerR * Math.cos(rad)
+            const y1 = center + innerR * Math.sin(rad)
+            const x2 = center + outerR * Math.cos(rad)
+            const y2 = center + outerR * Math.sin(rad)
+            return (
+              <line
+                key={`quarter-marker-${i}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="var(--muted-foreground)"
+                strokeWidth={1}
+                strokeOpacity={0.3}
+                strokeLinecap="round"
+              />
+            )
+          })}
+        </g>
+
+        {/* Minor constellation dots (animated) - restored */}
         <g>
           {Array.from({ length: hoursOnDial * 4 }).map((_, i) => {
             // Skip positions that would overlap with major constellation dots
@@ -484,8 +541,8 @@ function RadialClock({
             
             const angle = (i / (hoursOnDial * 4)) * 360 - 90
             const rad = (angle * Math.PI) / 180
-            const x = center + (outer - 4) * Math.cos(rad)
-            const y = center + (outer - 4) * Math.sin(rad)
+            const x = center + (outer - 2) * Math.cos(rad)
+            const y = center + (outer - 2) * Math.sin(rad)
             return (
               <circle 
                 key={`minor-constellation-${i}`} 
@@ -496,7 +553,7 @@ function RadialClock({
                 fillOpacity={0.4}
                 className="animate-twinkle"
                 style={{
-                  animationDelay: `${i * 0.15}s`,
+                  animationDelay: `${(i * 0.25) % 4}s`,
                   filter: "drop-shadow(0 0 1px var(--accent))"
                 }}
               />
@@ -510,8 +567,8 @@ function RadialClock({
           const angle = (hour / hoursOnDial) * 360 - 90
           const rad = (angle * Math.PI) / 180
           const r = inner + (outer - inner) / 2
-          const x = center + (r + 4) * Math.cos(rad)
-          const y = center + (r + 4) * Math.sin(rad)
+          const x = center + (r - 8) * Math.cos(rad)
+          const y = center + (r - 8) * Math.sin(rad)
           const label = is12h ? (hour === 0 ? "12" : String(hour).padStart(2, "0")) : String(hour).padStart(2, "0")
           return (
             <text

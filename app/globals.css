@@ -81,12 +81,12 @@
   --input: #2a2a2a;
   --ring: #3a3a3a;
 
-  /* Task palette remapped to sage green variations for dark mode */
-  --task-blue: #8baa91; /* sage base */
-  --task-teal: #7ba085; /* sage medium */
-  --task-orange: #6d927a; /* sage deep */
-  --task-cyan: #9bb5a1; /* sage light */
-  --task-pink: #a5c2ab; /* sage lighter */
+  /* Magical task color palette - diverse colors that complement sage green theme */
+  --task-blue: #6b9bd1; /* mystical blue */
+  --task-teal: #4ecdc4; /* enchanted teal */
+  --task-orange: #f4a261; /* golden amber */
+  --task-cyan: #a8dadc; /* ethereal cyan */
+  --task-pink: #e76f51; /* coral flame */
 
   --task-focus: var(--task-orange);
   --task-admin: var(--task-blue);
@@ -165,11 +165,11 @@
 @keyframes breathing {
   0%, 100% { 
     transform: scale(1); 
-    opacity: 0.6; 
+    opacity: 0.4; 
   }
   50% { 
-    transform: scale(1.02); 
-    opacity: 0.8; 
+    transform: scale(1.025); 
+    opacity: 0.6; 
   }
 }
 
@@ -208,12 +208,12 @@
 
 @keyframes twinkle {
   0%, 100% { 
-    opacity: 0.6; 
+    opacity: 0.5; 
     transform: scale(1);
   }
   50% { 
-    opacity: 1; 
-    transform: scale(1.1);
+    opacity: 0.8; 
+    transform: scale(1.05);
   }
 }
 
@@ -242,7 +242,7 @@
 
 /* Animation Classes with Accessibility Support */
 .animate-breathing {
-  animation: breathing 4s ease-in-out infinite;
+  animation: breathing 6s ease-in-out infinite;
 }
 
 .animate-glow-pulse {
@@ -258,7 +258,7 @@
 }
 
 .animate-twinkle {
-  animation: twinkle 3s ease-in-out infinite;
+  animation: twinkle 4s ease-in-out infinite;
 }
 
 .animate-ripple {
