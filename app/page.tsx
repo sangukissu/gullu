@@ -11,6 +11,7 @@ import { TaskLists } from "@/components/task-lists"
 import type { Category, PlannerTask } from "@/components/types"
 import { DownloadIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { v4 as uuid } from "uuid"
+import { exportTasks, exportToGoogleCalendar, detectPlatform } from "@/lib/export"
 import { useZenGesture } from "@/hooks/use-zen-gesture"
 
 // Local storage backed SWR
@@ -157,6 +158,23 @@ export default function Page() {
     },
     { Focus: 0, Admin: 0, Creative: 0, Break: 0 } as Record<Category, number>,
   )
+
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+
+  const handleExportCalendar = () => {
+    exportTasks(tasks, date)
+    setExportMenuOpen(false)
+  }
+
+  const handleExportGoogle = () => {
+    exportToGoogleCalendar(tasks, date)
+    setExportMenuOpen(false)
+  }
+
+  const handleExportJSON = () => {
+    exportJSON()
+    setExportMenuOpen(false)
+  }
 
   const exportJSON = () => {
     const payload = {
@@ -338,10 +356,40 @@ export default function Page() {
               <TaskForm onCreate={onCreate} />
             </DialogContent>
           </Dialog>
-          <Button variant="secondary" className="rounded-xl h-11 px-5 cursor-pointer" onClick={exportJSON}>
-            <DownloadIcon className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <div className="relative">
+            <Button 
+              variant="secondary" 
+              className="rounded-xl h-11 px-5 cursor-pointer" 
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+            >
+              <DownloadIcon className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            {exportMenuOpen && (
+              <div className="absolute bottom-full mb-2 right-0 bg-background border border-border rounded-lg shadow-lg min-w-48 z-50">
+                <div className="p-1">
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer"
+                    onClick={handleExportJSON}
+                  >
+                    Export as JSON
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer"
+                    onClick={handleExportCalendar}
+                  >
+                    Export to Calendar/Reminders
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer"
+                    onClick={handleExportGoogle}
+                  >
+                    Export to Google Calendar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>
