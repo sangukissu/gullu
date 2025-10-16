@@ -11,6 +11,7 @@ import { TaskLists } from "@/components/task-lists"
 import type { Category, PlannerTask } from "@/components/types"
 import { DownloadIcon, PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { v4 as uuid } from "uuid"
+import { useZenGesture } from "@/hooks/use-zen-gesture"
 
 // Local storage backed SWR
 const swrFetcher = (key: string) => {
@@ -50,7 +51,11 @@ export default function Page() {
   const [placingTaskId, setPlacingTaskId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [now, setNow] = useState<Date>(new Date())
+  const [zenMode, setZenMode] = useState(false)
   const { tasks, save } = useDayTasks(date)
+
+  // Zen gesture hook
+  useZenGesture(() => setZenMode(prev => !prev))
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
@@ -168,9 +173,9 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-dvh w-full bg-background text-foreground flex flex-col">
+    <main className={`min-h-dvh w-full bg-background text-foreground flex flex-col ${zenMode ? 'zen-active' : ''}`}>
       {/* Top toolbar */}
-      <header className="flex items-center justify-between px-4 py-3 md:px-6">
+      <header className="flex items-center justify-between px-4 py-3 md:px-6" data-zen-hide>
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -230,7 +235,7 @@ export default function Page() {
 
       {/* Placing hint */}
       {placingTaskId && (
-        <div className="px-4 md:px-6 -mt-2 mb-2">
+        <div className="px-4 md:px-6 -mt-2 mb-2" data-zen-hide>
           <div className="mx-auto max-w-3xl text-center text-xs text-muted-foreground">
             Tap anywhere on the clock to place your task.
           </div>
@@ -238,8 +243,8 @@ export default function Page() {
       )}
 
       {/* Clock and summary */}
-      <section className="flex-1 grid md:grid-cols-2 gap-6 px-4 md:px-6 pb-24 md:pb-10">
-        <div className="flex items-center justify-center">
+      <section className={`flex-1 ${zenMode ? '' : 'grid md:grid-cols-2'} gap-6 px-4 md:px-6 pb-24 md:pb-10`}>
+        <div className={`flex items-center justify-center ${zenMode ? '' : ''}`} data-zen-keep>
           <RadialClock
             date={date}
             tasks={scheduled}
@@ -304,7 +309,7 @@ export default function Page() {
         </div>
 
         {/* Lists */}
-        <div className="max-w-lg mx-auto w-full">
+        <div className="max-w-lg mx-auto w-full" data-zen-hide>
           <TaskLists
             scheduled={scheduled}
             unplaced={unplaced}
@@ -317,7 +322,7 @@ export default function Page() {
       </section>
 
       {/* Bottom actions */}
-      <div className="fixed left-0 right-0 bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border">
+      <div className="fixed left-0 right-0 bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border" data-zen-hide>
         <div className="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between gap-3">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

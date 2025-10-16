@@ -13,9 +13,9 @@ export function useZenGesture(
     bidirectional?: boolean // allow RLRL too
   },
 ) {
-  const velocityThreshold = opts?.velocityThreshold ?? 0.55
-  const minDx = opts?.minDx ?? 32
-  const windowMs = opts?.windowMs ?? 1400
+  const velocityThreshold = opts?.velocityThreshold ?? 0.4
+  const minDx = opts?.minDx ?? 25
+  const windowMs = opts?.windowMs ?? 2000
   const acceptBoth = opts?.bidirectional ?? true
 
   const seqRef = useRef<Dir[]>([])
@@ -37,11 +37,13 @@ export function useZenGesture(
     const elapsed = now - (startRef.current ?? now)
     if (elapsed > windowMs) {
       reset(now)
+      pushDir(dir, now) // restart with current direction
       return
     }
     const s = seq.join(",")
     const ok = s === "left,right,left,right" || (acceptBoth && s === "right,left,right,left")
     if (ok) {
+      console.log("Zen gesture detected!") // Debug log
       onToggle()
       reset(now)
     }
